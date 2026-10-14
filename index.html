@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DNSRadar | DNS Query Anomaly Detection & Threat Pattern Analysis</title>
+  <meta name="description" content="DNSRadar - Next-generation DNS Query Anomaly Detection and Threat Pattern Analysis engine powered by Machine Learning and heuristic cyber telemetry.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Header / HUD Navigation -->
+  <header class="hud-header">
+    <div class="logo-area">
+      <div class="radar-pulse-icon" id="headerRadarIcon">
+        <span class="ping-ring"></span>
+        <span class="pulse-core"></span>
+      </div>
+      <div>
+        <h1 class="brand-title">DNS<span class="accent-text">Radar</span></h1>
+        <p class="brand-subtitle">Anomaly Detection & Threat Pattern Analysis Engine</p>
+      </div>
+    </div>
+
+    <div class="hud-center-telemetry">
+      <div class="hud-badge" id="hudDbStatusBadge">
+        <span class="status-dot warning" id="dbStatusDot"></span>
+        <span class="badge-label">DATABASE:</span>
+        <span class="badge-value" id="dbStatusText">Checking...</span>
+        <button class="icon-btn-tiny" id="btnOpenDbConfig" title="Configure Database">⚙️</button>
+      </div>
+      <div class="hud-badge">
+        <span class="status-dot online"></span>
+        <span class="badge-label">ML ENGINE:</span>
+        <span class="badge-value">Isolation Forest + Shannon Heuristics</span>
+      </div>
+    </div>
+
+    <div class="hud-actions">
+      <button class="btn btn-secondary" id="btnSimulateTraffic">
+        <span class="btn-icon">⚡</span> Ingest Simulation Stream
+      </button>
+      <button class="btn btn-outline" id="btnRefreshData" title="Refresh Telemetry">
+        <span class="btn-icon">🔄</span> Refresh
+      </button>
+      <button class="btn btn-danger-outline" id="btnClearData" title="Clear Query Telemetry">
+        <span class="btn-icon">🗑️</span> Clear
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+    
+    <!-- Top Metrics Overview -->
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">TOTAL QUERIES EVALUATED</span>
+          <span class="metric-icon">📡</span>
+        </div>
+        <div class="metric-value" id="metricTotalQueries">0</div>
+        <div class="metric-meta">Ingested across all monitored resolvers</div>
+      </div>
+
+      <div class="metric-card alert-card">
+        <div class="metric-header">
+          <span class="metric-title">ANOMALOUS QUERIES</span>
+          <span class="metric-icon">⚠️</span>
+        </div>
+        <div class="metric-value alert-text" id="metricAnomalies">0</div>
+        <div class="metric-meta" id="metricAnomalyRate">0.0% anomaly threshold hit</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">TUNNELING & EXFILTRATION</span>
+          <span class="metric-icon">🧬</span>
+        </div>
+        <div class="metric-value" id="metricTunnelingCount">0</div>
+        <div class="metric-meta">High-entropy data payloads detected</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">DGA & C2 SIGNATURES</span>
+          <span class="metric-icon">🛡️</span>
+        </div>
+        <div class="metric-value" id="metricDgaCount">0</div>
+        <div class="metric-meta">Algorithmically generated / Fast-flux</div>
+      </div>
+    </section>
+
+    <!-- Mid Section: Interactive Sandbox & Visual Distribution Charts -->
+    <div class="dashboard-split">
+      
+      <!-- Left: Real-time Analysis Sandbox -->
+      <section class="panel-card sandbox-panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <span class="panel-icon">🔬</span>
+            <h2 class="panel-title">Interactive DNS Query Sandbox</h2>
+          </div>
+          <span class="badge-tag">Zero-Day Inspection</span>
+        </div>
+
+        <p class="panel-desc">
+          Test any domain to evaluate real-time Shannon entropy, character distribution, n-gram rarity, and Isolation Forest anomaly score.
+        </p>
+
+        <!-- Quick Sample Attack Presets -->
+        <div class="preset-triggers">
+          <span class="preset-label">Attack Presets:</span>
+          <button class="preset-chip" id="presetDga" data-domain="xk9480vlz109ql.biz" data-record="A">DGA Malware</button>
+          <button class="preset-chip" id="presetTunnel" data-domain="a49bf10e82c730da4fbc81029e81.77c82a10b9910d82.tunnel-data.net" data-record="TXT">DNS Tunneling</button>
+          <button class="preset-chip" id="presetC2" data-domain="c2-beacon-f9a12.dark-mesh.io" data-record="A">Fast-Flux C2</button>
+          <button class="preset-chip" id="presetPhish" data-domain="paypa1-security-verification.xyz" data-record="A">Typosquatting</button>
+          <button class="preset-chip" id="presetBenign" data-domain="api.github.com" data-record="A">Benign Corporate</button>
+        </div>
+
+        <!-- Query Form -->
+        <form id="analyzeForm" class="sandbox-form">
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label for="inputDomain">Target Domain / FQDN</label>
+              <input type="text" id="inputDomain" class="cyber-input" placeholder="e.g. 7f83a09e.tunnel-exfil.net or google.com" required autocomplete="off">
+            </div>
+            <div class="form-group flex-1">
+              <label for="selectRecordType">Record Type</label>
+              <select id="selectRecordType" class="cyber-select">
+                <option value="A">A (IPv4)</option>
+                <option value="TXT">TXT (Data Carrier)</option>
+                <option value="AAAA">AAAA (IPv6)</option>
+                <option value="CNAME">CNAME (Alias)</option>
+                <option value="NULL">NULL (Raw Exfil)</option>
+                <option value="MX">MX (Mail)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="inputClientIp">Originating Client IP</label>
+              <input type="text" id="inputClientIp" class="cyber-input" value="192.168.1.145">
+            </div>
+            <div class="form-group flex-1">
+              <label for="inputTtl">TTL (Seconds)</label>
+              <input type="number" id="inputTtl" class="cyber-input" value="300" min="0" max="86400">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="btnSubmitAnalyze">
+              <span class="btn-icon">⚡</span> Analyze & Ingest Query
+            </button>
+          </div>
+        </form>
+
+        <!-- Live Sandbox Inspection Output -->
+        <div class="inspection-result-box" id="sandboxResultBox" style="display: none;">
+          <div class="result-header">
+            <div>
+              <span class="result-domain-text" id="resDomain">-</span>
+              <span class="result-threat-badge" id="resThreatBadge">-</span>
+            </div>
+            <div class="score-display">
+              <span class="score-label">ANOMALY SCORE</span>
+              <span class="score-number" id="resAnomalyScore">0.00</span>
+            </div>
+          </div>
+
+          <div class="meter-bar-track">
+            <div class="meter-bar-fill" id="resScoreBar" style="width: 0%;"></div>
+          </div>
+
+          <div class="feature-metrics-grid" id="resFeaturesGrid">
+            <!-- Dynamic feature metrics injected via JS -->
+          </div>
+
+          <div class="indicators-box" id="resIndicatorsBox">
+            <div class="indicators-title">Threat Pattern Indicators:</div>
+            <ul class="indicators-list" id="resIndicatorsList"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Threat Pattern Telemetry & Charts -->
+      <section class="panel-card charts-panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <span class="panel-icon">📊</span>
+            <h2 class="panel-title">Threat Pattern Distribution</h2>
+          </div>
+          <span class="badge-tag">Real-Time Metrics</span>
+        </div>
+
+        <div class="charts-container">
+          <!-- Canvas 1: Category Breakdown -->
+          <div class="chart-box">
+            <div class="chart-title">THREAT VECTOR DISTRIBUTION</div>
+            <div class="canvas-wrapper">
+              <canvas id="threatBreakdownCanvas" width="340" height="200"></canvas>
+            </div>
+            <div class="chart-legend" id="threatBreakdownLegend"></div>
+          </div>
+
+          <!-- Canvas 2: Severity Score Buckets -->
+          <div class="chart-box">
+            <div class="chart-title">ANOMALY SEVERITY SPECTRUM</div>
+            <div class="canvas-wrapper">
+              <canvas id="severityCanvas" width="340" height="150"></canvas>
+            </div>
+            <div class="chart-legend" id="severityLegend"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Bottom Section: Query Telemetry Log & Forensics Table -->
+    <section class="panel-card log-panel">
+      <div class="panel-header">
+        <div class="panel-title-wrap">
+          <span class="panel-icon">📋</span>
+          <h2 class="panel-title">Ingested Query Log & Forensics Feed</h2>
+        </div>
+        <div class="table-filters">
+          <div class="filter-item">
+            <label for="filterThreatType">Threat Pattern:</label>
+            <select id="filterThreatType" class="cyber-select-small">
+              <option value="ALL">All Categories</option>
+              <option value="Benign">Benign Only</option>
+              <option value="DNS Tunneling">DNS Tunneling</option>
+              <option value="DGA (Algorithmically Generated)">DGA (Algorithmically Generated)</option>
+              <option value="Fast-Flux / C2 Beacon">Fast-Flux / C2</option>
+              <option value="Typosquatting / Brand Impersonation">Typosquatting</option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label for="filterMinScore">Min Anomaly Score: <span id="lblMinScore">0.0</span></label>
+            <input type="range" id="filterMinScore" min="0" max="1" step="0.05" value="0" class="cyber-slider">
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="cyber-table" id="queriesTable">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Domain / FQDN</th>
+              <th>Type</th>
+              <th>Client IP</th>
+              <th>Shannon Entropy</th>
+              <th>Score</th>
+              <th>Threat Classification</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="queriesTableBody">
+            <tr>
+              <td colspan="8" class="table-empty">Loading ingested DNS telemetry...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Database Configuration Modal -->
+  <div class="cyber-modal-backdrop" id="dbModalBackdrop" style="display: none;">
+    <div class="cyber-modal">
+      <div class="modal-header">
+        <h3 class="modal-title">MongoDB Connection Configuration</h3>
+        <button class="modal-close-btn" id="btnCloseDbModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          The prototype automatically persists query logs and threat records in MongoDB. If MongoDB is offline, it seamlessly activates a zero-config persistent local store.
+        </p>
+
+        <div class="form-group">
+          <label for="inputMongoUri">MongoDB URI</label>
+          <input type="text" id="inputMongoUri" class="cyber-input" value="mongodb://localhost:27017/" placeholder="mongodb://localhost:27017 or Atlas URI">
+        </div>
+
+        <div class="modal-status-box" id="modalDbStatusBox">
+          <div class="status-row">
+            <span class="status-key">Connection Mode:</span>
+            <span class="status-val" id="modalDbMode">-</span>
+          </div>
+          <div class="status-row">
+            <span class="status-key">Database:</span>
+            <span class="status-val" id="modalDbName">dns_threat_db</span>
+          </div>
+          <div class="status-row">
+            <span class="status-key">Status Detail:</span>
+            <span class="status-val" id="modalDbError">Active</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btnCancelDbModal">Cancel</button>
+        <button class="btn btn-primary" id="btnSaveDbConfig">Test & Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Forensic Drill-down Modal -->
+  <div class="cyber-modal-backdrop" id="forensicsModalBackdrop" style="display: none;">
+    <div class="cyber-modal modal-large">
+      <div class="modal-header">
+        <h3 class="modal-title">DNS Forensics & Feature Breakdown</h3>
+        <button class="modal-close-btn" id="btnCloseForensicsModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="forensics-hero">
+          <div>
+            <div class="forensics-domain" id="forensicDomain">example.com</div>
+            <div class="forensics-meta" id="forensicMeta">Client: 192.168.1.10 | Type: A | TTL: 300s</div>
+          </div>
+          <div class="forensics-score-badge" id="forensicScoreBadge">
+            <div class="f-score" id="forensicScore">0.92</div>
+            <div class="f-lbl">ANOMALY RATING</div>
+          </div>
+        </div>
+
+        <div class="forensics-section-title">ML & HEURISTIC DETECTION INDICATORS</div>
+        <ul class="indicators-list" id="forensicIndicatorsList"></ul>
+
+        <div class="forensics-section-title">EXTRACTED CYBER DEFENSE FEATURE VECTOR</div>
+        <div class="feature-table-wrapper">
+          <table class="feature-table" id="forensicsFeatureTable">
+            <thead>
+              <tr>
+                <th>Feature Name</th>
+                <th>Measured Value</th>
+                <th>Normal Baseline</th>
+                <th>Threat Significance</th>
+              </tr>
+            </thead>
+            <tbody id="forensicsFeatureTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btnCloseForensicsBtn">Close Forensics</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="/js/app.js"></script>
+</body>
+</html>
